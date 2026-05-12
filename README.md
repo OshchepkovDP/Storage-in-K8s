@@ -244,34 +244,38 @@ spec:
 
 ### Задание 1:
 
-Скриншот 
-![]()
+Скриншот описание пода с контейнерамипосредством вывода команды `kubectl describe pods data-exchange`.
+![data_exchange.jpg](https://github.com/OshchepkovDP/Storage-in-K8s/blob/main/img/data_exchange.jpg)
 
-Скриншот 
-![]()
+Скриншот вывода команды чтения файла `kubectl logs -l app=data-exchange -c multitool-reader --tail=10`
+![multitool_logs.jpg](https://github.com/OshchepkovDP/Storage-in-K8s/blob/main/img/multitool_logs.jpg)
 
-Ссылка на манифест `` для создания 
-[]()
+Ссылка на манифест `containers-data-exchange.yaml` для развёртывания `Deployment` приложения, состоящего из контейнеров `busybox` и `multitool`.
+[containers-data-exchange.yaml](https://github.com/OshchepkovDP/Storage-in-K8s/blob/main/containers-data-exchange.yaml)
 
 ### Задание 2:
 
-Скриншот                                     
-![]()
+Скриншот подтверждающий создание `PV` и `PVC` с демонстрацией, что контейнер `multitool` может читать данные из файла в смонтированной директории, в который `busybox` записывает 
+данные каждые 5 секунд.
+![multitool_logs_PV.jpg](https://github.com/OshchepkovDP/Storage-in-K8s/blob/main/img/multitool_logs_PV.jpg)
 
-Скриншот 
-![]()
+Скриншот подтверждающий удаление `Deployment` и `PVC`. Так же мы видим, что после удаления `PVC` `PV` остаётся в статусе `Released`. Это происходит из-за защитной политики
+kubernetes `Retain`, которая позволяет сохранять данные на ноде в директории `/tmp/k8s-data` которые в свою очередь, можно удалить только вручную.
+![delete_PVC.jpg](https://github.com/OshchepkovDP/Storage-in-K8s/blob/main/img/delete_PVC.jpg)
 
-Ссылка на манифест `` для создания 
-[]()
+Скриншот подтверждающий последующее удаление `PV`. Та же защитная политика `Retain` не позволяет удалить локальные данные без ручного вмешательства.
+![delete_PV.jpg](https://github.com/OshchepkovDP/Storage-in-K8s/blob/main/img/delete_PV.jpg)
+
+Ссылка на манифест `pv-pvc.yaml` для развёртывания `Deployment` с контейнерами `busybox‑writer` и `multitool‑reader`, использующими общее постоянное хранилище `PV` через `PVC`
+[pv-pvc.yaml](https://github.com/OshchepkovDP/Storage-in-K8s/blob/main/pv-pvc.yaml)
+
 
 ### Задание 3:
 
-Скриншот                                     
-![]()
+Скриншот подтверждения создания `StorageClass` и `PVC` а так же демонстрация, что контейнер multitool может читать данные из файла в смонтированной директории, в который busybox 
+записывает данные каждые 5 секунд.
+![StorageClass.jpg](https://github.com/OshchepkovDP/Storage-in-K8s/blob/main/img/StorageClass.jpg)
 
-Скриншот 
-![]()
-
-Ссылка на манифест `` для создания 
-[]()o
-
+Ссылка на манифест `sc.yaml` для развёртывания Deployment с двумя контейнерами `(busybox-writer и multitool-reader)`, использующими общее хранилище через `PVC sc‑pvc`, 
+который привязан к `PV sc‑pv` по `StorageClass`
+[sc.yaml](https://github.com/OshchepkovDP/Storage-in-K8s/blob/main/sc.yaml)

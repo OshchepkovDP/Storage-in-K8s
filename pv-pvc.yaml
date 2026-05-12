@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-pv
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostPath:
+    path: /tmp/k8s-data
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: local-pvc
+spec:
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+  storageClassName: manual
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-exchange-pvc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-exchange-pvc
+  template:
+    metadata:
+      labels:
+        app: data-exchange-pvc
+    spec:
+      containers:
+      - name: busybox-writer
+        image: busybox
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            mkdir -p /persistent-data
+            while true; do
+              echo "$(date): Data written to PV" >> /persistent-data/data.log
+              sleep 5
+            done
+        volumeMounts:
+        - name: pv-storage
+          mountPath: /persistent-data
+      - name: multitool-reader
+        image: praqma/network-multitool
+        command: ["/bin/sh", "-c"]
+        args: ["tail -f /persistent-data/data.log"]
+        volumeMounts:
+        - name: pv-storage
+          mountPath: /persistent-data
+      volumes:
+      - name: pv-storage
+        persistentVolumeClaim:
+          claimName: local-pvc

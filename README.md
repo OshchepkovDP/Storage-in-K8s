@@ -1,42 +1,277 @@
-# Домашнее задание к занятию "`#«Базовые объекты K8S» - Ощепков Дмитрий`"
+# Домашнее задание к занятию "`#«Хранение в K8s» - Ощепков Дмитрий`"
 
 ## Цель задания
 
-В тестовой среде для работы с` Kubernetes`, установленной в предыдущем ДЗ, необходимо развернуть `Pod` с приложением и подключиться к нему со своего локального компьютера.
+Научиться работать с хранилищами в тестовой среде `Kubernetes`:
 
-Чеклист готовности к домашнему заданию
-Установленное k8s-решение (например, `MicroK8S`).
-Установленный локальный `kubectl`.
-Редактор YAML-файлов с подключенным Git-репозиторием.
+обеспечить обмен файлами между контейнерами пода;
+создавать `PersistentVolume (PV)` и использовать его в подах через `PersistentVolumeClaim (PVC)`;
+объявлять свой `StorageClass (SC)` и монтировать его в под через `PVC`.
+Это задание поможет вам освоить базовые принципы взаимодействия с хранилищами в `Kubernetes` — одного из ключевых навыков для работы с кластерами. 
+На практике `Volume, PV, PVC` используются для хранения данных независимо от пода, обмена данными между подами и контейнерами внутри пода. 
+Понимание этих механизмов поможет вам упростить проектирование слоя данных для приложений, разворачиваемых в кластере `k8s`.
 
-## Инструменты и дополнительные материалы, которые пригодятся для выполнения задания
+# Задание 1. Volume: обмен данными между контейнерами в поде 
 
-Описание `Pod` и примеры манифестов.
-Описание `Service`.
+## Задача
 
-## Задание 1. 
+Создать Deployment приложения, состоящего из двух контейнеров, обменивающихся данными.
 
-Создать `Pod` с именем `hello-world`.
-Создать манифест (yaml-конфигурацию) `Pod`.
-Использовать `image - gcr.io/kubernetes-e2e-test-images/echoserver:2.2`.
-Подключиться локально к `Pod` с помощью `kubectl port-forward` и вывести значение (curl или в браузере).
+### Шаги выполнения
 
-## Задание 2. Создать Service и подключить его к Pod
+1. Создать Deployment приложения, состоящего из контейнеров busybox и multitool.
+2. Настроить busybox на запись данных каждые 5 секунд в некий файл в общей директории.
+3. Обеспечить возможность чтения файла контейнером multitool.
 
-Создать `Pod` с именем `netology-web`.
-Использовать `image — gcr.io/kubernetes-e2e-test-images/echoserver:2.2`.
-Создать `Service` с именем `netology-svc` и подключить к `netology-web`.
-Подключиться локально к `Service` с помощью `kubectl port-forward` и вывести значение (curl или в браузере).
+### Что сдать на проверку
 
-Ответ:
-Скриншот выполнения команды `kubectl get pods` и локальному подключению к `Pod` с помощью `kubectl port-forward`.
-![kubectl_hello.jpg](https://github.com/OshchepkovDP/K8S-Basic-Objects/blob/main/img/kubectl_hello.jpg)
-Ссылка на манифест `hello-world-pod.yaml` для создания `Pod` с именем `hello-world` и  развёртывания контейнера `gcr.io/kubernetes-e2e-test-images/echoserver:2.2`
-[hello-world-pod.yaml](https://github.com/OshchepkovDP/K8S-Basic-Objects/blob/main/hello-world-pod.yaml)
+**Манифесты:**
+- `containers-data-exchange.yaml`
 
-Скриншот выполнения команды `kubectl get pods` и локальному подключению к `Pod` с помощью `kubectl port-forward`
-![kubectl_netology_web.jpg](https://github.com/OshchepkovDP/K8S-Basic-Objects/blob/main/img/kubectl_netology_web.jpg)
-Ссылка на манифест `netology-web` для создания`Pod` с именем `netology-web` и развёртывания контейнера `image — gcr.io/kubernetes-e2e-test-images/echoserver:2.2`
-[netology-web-pod.yaml](https://github.com/OshchepkovDP/K8S-Basic-Objects/blob/main/netology-web-pod.yaml)
-Ссылка на манифест для создания `Service` с именем `netology-svc`
-[netology-service.yaml](https://github.com/OshchepkovDP/K8S-Basic-Objects/blob/main/netology-service.yaml)
+**Скриншоты:**
+
+- описание пода с контейнерами `(kubectl describe pods data-exchange)`
+- вывод команды чтения файла `(tail -f <имя общего файла>)`
+
+## Задание 2. PV, PVC
+
+### Задача
+
+Создать Deployment приложения, использующего локальный PV, созданный вручную.
+
+### Шаги выполнения
+
+1. Создать Deployment приложения, состоящего из контейнеров busybox и multitool, использующего созданный ранее PVC
+2. Создать PV и PVC для подключения папки на локальной ноде, которая будет использована в поде.
+3. Продемонстрировать, что контейнер multitool может читать данные из файла в смонтированной директории, в который busybox записывает данные каждые 5 секунд.
+4. Удалить Deployment и PVC. Продемонстрировать, что после этого произошло с PV. Пояснить, почему. (Используйте команду `kubectl describe pv`).
+5. Продемонстрировать, что файл сохранился на локальном диске ноды. Удалить PV. Продемонстрировать, что произошло с файлом после удаления PV. Пояснить, почему.
+
+### Что сдать на проверку
+
+**Манифесты:**
+- `pv-pvc.yaml`
+
+**Скриншоты:**
+- каждый шаг выполнения задания, начиная с шага 2.
+
+**Описания:**
+- объяснение наблюдаемого поведения ресурсов в двух последних шагах.
+
+## Задание 3. StorageClass
+
+### Задача
+
+Создать Deployment приложения, использующего PVC, созданный на основе StorageClass.
+
+### Шаги выполнения
+
+1. Создать Deployment приложения, состоящего из контейнеров busybox и multitool, использующего созданный ранее PVC.
+2. Создать SC и PVC для подключения папки на локальной ноде, которая будет использована в поде.
+3. Продемонстрировать, что контейнер multitool может читать данные из файла в смонтированной директории, в который busybox записывает данные каждые 5 секунд.
+
+### Что сдать на проверку
+
+**Манифесты:**
+- `sc.yaml`
+
+**Скриншоты:**
+- каждый шаг выполнения задания, начиная с шага 2
+
+# Шаблоны манифестов с учебными комментариями
+
+# 1. Deployment (containers-data-exchange.yaml)
+
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-exchange
+spec:
+  replicas: # ЗАДАНИЕ: Укажите количество реплик
+  selector:
+    matchLabels:
+      app: # ДОПОЛНИТЕ: Метка для селектора
+  template:
+    metadata:
+      labels:
+        app: # ПОВТОРИТЕ: Метка из selector.matchLabels
+    spec:
+      containers:
+      - name: # ДОПОЛНИТЕ: Имя первого контейнера
+        image: busybox
+        command: ["/bin/sh", "-c"] 
+        args: ["echo $(date) > путь_к_файлу; sleep 3600"] # КЛЮЧЕВОЕ: Команда записи данных в файл в директории из секции volumeMounts контейнера
+        volumeMounts:
+        - name: # ДОПОЛНИТЕ: Имя монтируемого раздела. Должно совпадать с именем эфемерного хранилища, объявленного на уровне пода.
+          mountPath: # КЛЮЧЕВОЕ: Путь монтирования эфемерного хранилища внутри контейнера 1
+      - name: # ДОПОЛНИТЕ: Имя второго контейнера
+        image: busybox
+        command: ["/bin/sh", "-c"]
+        args: ["tail -f путь_к_файлу"] # КЛЮЧЕВОЕ: Команда для чтения данных из файла, расположенного в директории, указанной в volumeMounts контейнера
+        volumeMounts:
+        - name: # ДОПОЛНИТЕ: Имя монтируемого раздела. Должно совпадать с именем эфемерного хранилища, объявленного на уровне пода
+          mountPath: # КЛЮЧЕВОЕ: Путь монтирования эфемерного хранилища внутри контейнера 2
+      volumes:
+      - name: # ДОПОЛНИТЕ: Имя монтируемого раздела эфемерного хранилища
+        emptyDir: {} # ИНФОРМАЦИЯ: Определяем эфемерное хранилище, которое работает только внутри пода
+```
+
+# 2. Deployment (pv-pvc.yaml)
+```
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: # ДОПОЛНИТЕ: Имя хранилища
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: # КЛЮЧЕВОЕ: Путь к директории на ноде (хосте, на котором развёрнут кластер)
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: # ДОПОЛНИТЕ: Имя PVC
+spec:
+  volumeName: # ДОПОЛНИТЕ: Имя PV, к которому будет привязан PVC, должен совпадать с созданным ранее PV
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: # ДОПОЛНИТЕ: Какой объём хранилища вы хотите передать в контейнер. Должно быть меньше или равно параметру storage из PV
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-exchange-pvc
+spec:
+  replicas: # ЗАДАНИЕ: Укажите количество реплик
+  selector:
+    matchLabels:
+      app: # ДОПОЛНИТЕ: Метка для селектора
+  template:
+    metadata:
+      labels:
+        app: # ПОВТОРИТЕ: Метка из selector.matchLabels
+    spec:
+      containers:
+      - name: # ДОПОЛНИТЕ: Имя первого контейнера
+        image: busybox
+        command: ["/bin/sh", "-c"] 
+        args: ["echo $(date) > путь_к_файлу; sleep 3600"] # КЛЮЧЕВОЕ: Команда записи данных в файл в директории из секции volumeMounts контейнера 
+        volumeMounts:
+        - name: # ДОПОЛНИТЕ: Имя монтируемого раздела. Должно совпадать с именем хранилища, объявленного на уровне пода
+          mountPath: # КЛЮЧЕВОЕ: Путь монтирования хранилища внутри контейнера 1
+      - name: # ДОПОЛНИТЕ: Имя второго контейнера
+        image: busybox
+        command: ["/bin/sh", "-c"]
+        args: ["tail -f путь_к_файлу"] # КЛЮЧЕВОЕ: Команда для чтения данных из файла, расположенного в директории, указанной в volumeMounts контейнера
+        volumeMounts:
+        - name: # ДОПОЛНИТЕ: Имя монтируемого раздела. Должно совпадать с именем хранилища, объявленного на уровне пода
+          mountPath: # КЛЮЧЕВОЕ: Путь монтирования хранилища внутри контейнера 2
+      volumes:
+      - name: # ДОПОЛНИТЕ: Имя монтируемого раздела хранилища
+        persistentVolumeClaim:
+          claimName: # КЛЮЧЕВОЕ: Совпадает с именем PVC объявленного ранее
+```
+
+# 3. Deployment (sc.yaml)
+
+```
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: # ДОПОЛНИТЕ: Имя StorageClass
+provisioner: kubernetes.io/no-provisioner # ИНФОРМАЦИЯ: Нет автоматического развёртывания
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: # ДОПОЛНИТЕ: Имя PVC
+spec:
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: # ДОПОЛНИТЕ: Какой объем хранилища вы хотите передать в контейнер. Должно быть меньше или равно параметру storage из PV
+  storageClassName: # ДОПОЛНИТЕ: Имя StorageClass. Должно совпадать с объявленным ранее
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-exchange-sc
+spec:
+  replicas: # ЗАДАНИЕ: Укажите количество реплик
+  selector:
+    matchLabels:
+      app: # ДОПОЛНИТЕ: Метка для селектора
+  template:
+    metadata:
+      labels:
+        app: # ПОВТОРИТЕ: Метка из selector.matchLabels
+    spec:
+      containers:
+      - name: # ДОПОЛНИТЕ: Имя первого контейнера
+        image: busybox
+        command: ["/bin/sh", "-c"] 
+        args: ["echo $(date) > путь_к_файлу; sleep 3600"] # КЛЮЧЕВОЕ: Команда для чтения данных из файла, расположенного в директории, указанной в volumeMounts контейнера
+        volumeMounts:
+        - name: # ДОПОЛНИТЕ: Имя монтируемого раздела. Должно совпадать с именем хранилища, объявленного на уровне пода
+          mountPath: # КЛЮЧЕВОЕ: Путь монтирования хранилища внутри контейнера 1
+      - name: # ДОПОЛНИТЕ: Имя второго контейнера
+        image: busybox
+        command: ["/bin/sh", "-c"]
+        args: ["tail -f путь_к_файлу"] # КЛЮЧЕВОЕ: Команда для чтения данных из файла, расположенного в директории, указанной в volumeMounts контейнера
+        volumeMounts:
+        - name: # ДОПОЛНИТЕ: Имя монтируемого раздела. Должно совпадать с именем хранилища, объявленного на уровне пода
+          mountPath: # КЛЮЧЕВОЕ: Путь монтирования хранилища внутри контейнера 2
+      volumes:
+      - name: # ДОПОЛНИТЕ: Имя монтируемого раздела хранилища
+        persistentVolumeClaim:
+          claimName: # КЛЮЧЕВОЕ: Совпадает с именем PVC объявленного ранее
+```
+
+## Ответ:
+
+### Задание 1:
+
+Скриншот 
+![]()
+
+Скриншот 
+![]()
+
+Ссылка на манифест `` для создания 
+[]()
+
+### Задание 2:
+
+Скриншот                                     
+![]()
+
+Скриншот 
+![]()
+
+Ссылка на манифест `` для создания 
+[]()
+
+### Задание 3:
+
+Скриншот                                     
+![]()
+
+Скриншот 
+![]()
+
+Ссылка на манифест `` для создания 
+[]()o
+
